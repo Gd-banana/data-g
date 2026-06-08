@@ -205,7 +205,10 @@ print("处理后数据类型:")
 print(df_clean.dtypes)
 
 print("\\n========== 8. 最终数据概览 ==========")
-print(df_clean.describe(include='all'))`,
+print("数值型字段描述统计:")
+print(df_clean.describe().round(2))
+print("\\n非数值型字段描述统计:")
+print(df_clean.describe(include=['object', 'datetime64']).round(2))`
     pitfalls: [
       '直接使用dropna()删除所有含缺失值的行，导致数据量大幅减少',
       '忽视异常值的存在，直接进行后续分析',
@@ -338,7 +341,8 @@ print("\\n前5行数据:")
 print(df.head())
 
 print("\\n========== 2. 描述统计分析 ==========")
-print(df.describe())
+print("数值型字段描述统计:")
+print(df[['销量', '客单价', '好评率', '库存']].describe().round(2))
 
 print("\\n========== 3. 相关性分析 ==========")
 corr_matrix = df[['销量', '客单价', '好评率', '库存']].corr()
