@@ -848,7 +848,50 @@ print(f"预测销量: {prediction[0]:.0f}")`,
       '使用所有特征而不进行特征选择',
       '没有划分训练集和测试集',
       '只关注R²指标，忽略其他评估指标'
-    ]
+    ],
+    teachingContent: {
+      title: '线性回归核心知识',
+      sections: [
+        {
+          heading: '1. 什么是线性回归',
+          content: '线性回归是一种用于预测连续型因变量的统计方法。它假设自变量和因变量之间存在线性关系，可以用一条直线来拟合数据。在线性回归中，我们寻找最佳的直线来最小化预测值与实际值之间的误差。'
+        },
+        {
+          heading: '2. 线性回归的数学原理',
+          content: '简单线性回归的公式是：y = β₀ + β₁x + ε\n\n其中：\n- y 是因变量（预测值）\n- β₀ 是截距\n- β₁ 是斜率系数\n- x 是自变量\n- ε 是误差项\n\n多元线性回归则包含多个自变量：y = β₀ + β₁x₁ + β₂x₂ + ... + βₙxₙ + ε',
+          code: '# 简单线性回归示例\ny = β₀ + β₁ * advertising + β₂ * activities + β₃ * price'
+        },
+        {
+          heading: '3. 使用scikit-learn构建线性回归',
+          content: 'scikit-learn提供了LinearRegression类来实现线性回归：',
+          code: 'from sklearn.linear_model import LinearRegression\n\n# 创建模型\nmodel = LinearRegression()\n\n# 训练模型\nmodel.fit(X_train, y_train)\n\n# 进行预测\ny_pred = model.predict(X_test)'
+        },
+        {
+          heading: '4. 模型评估指标',
+          content: '常用的回归模型评估指标：\n\n1) R² (决定系数)：衡量模型解释方差的比例，范围[0,1]\n2) RMSE (均方根误差)：衡量预测值与实际值的平均偏差\n3) MAE (平均绝对误差)：衡量预测值与实际值的平均绝对偏差\n\nR²越接近1越好，RMSE和MAE越小越好。',
+          code: 'from sklearn.metrics import r2_score, mean_squared_error\n\nr2 = r2_score(y_true, y_pred)\nrmse = np.sqrt(mean_squared_error(y_true, y_pred))'
+        },
+        {
+          heading: '5. 特征工程技巧',
+          content: '在构建线性回归模型前，需要进行特征工程：\n\n1) 特征选择：选择与目标变量相关性高的特征\n2) 特征转换：对数变换、标准化、归一化\n3) 特征交互：创建特征之间的交互项\n4) 日期特征：提取月份、星期等时间特征',
+          code: '# 提取日期特征\ndf[\'月份\'] = df[\'日期\'].dt.month\ndf[\'星期\'] = df[\'日期\'].dt.dayofweek\ndf[\'是否周末\'] = (df[\'星期\'] >= 5).astype(int)'
+        },
+        {
+          heading: '6. 训练集和测试集划分',
+          content: '为了评估模型的泛化能力，需要将数据划分为训练集和测试集：',
+          code: 'from sklearn.model_selection import train_test_split\n\n# 划分数据集（80%训练，20%测试）\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.2, random_state=42\n)'
+        },
+        {
+          heading: '7. 多重共线性问题',
+          content: '当自变量之间高度相关时会出现多重共线性问题，这会影响系数的稳定性。可以通过以下方法检测和处理：\n\n1) 计算相关系数矩阵\n2) 使用VIF（方差膨胀因子）检测\n3) 删除高度相关的特征\n4) 使用正则化方法（Ridge、Lasso）',
+          code: '# 计算相关系数矩阵\ncorr_matrix = df[[\'销量\', \'广告费\', \'客单价\']].corr()\nprint(corr_matrix.round(2))'
+        },
+        {
+          heading: '8. 完整线性回归流程',
+          content: '一个完整的线性回归项目流程：\n\n1. 数据加载和探索\n2. 数据清洗和预处理\n3. 特征工程\n4. 划分训练集和测试集\n5. 构建线性回归模型\n6. 模型训练和预测\n7. 模型评估\n8. 结果分析和报告'
+        }
+      ]
+    }
   },
   'project-7': {
     id: 'project-7',
@@ -974,7 +1017,49 @@ print(feature_importance.round(4))`,
       '没有分析特征重要性',
       '使用过多的树数量导致计算效率低下',
       '没有进行交叉验证'
-    ]
+    ],
+    teachingContent: {
+      title: '随机森林核心知识',
+      sections: [
+        {
+          heading: '1. 什么是随机森林',
+          content: '随机森林是一种集成学习算法，由多个决策树组成。它通过"投票"机制来做出最终预测，具有很高的准确性和鲁棒性。随机森林可以用于分类和回归任务。'
+        },
+        {
+          heading: '2. 随机森林的工作原理',
+          content: '随机森林的核心思想是"随机"和"集成"：\n\n1) 随机采样：从原始数据中有放回地随机采样构建训练集（bootstrap采样）\n2) 随机特征选择：每个决策树只使用部分特征\n3) 集成预测：多个决策树投票决定最终结果\n\n这种随机性使得模型具有很好的泛化能力，不容易过拟合。'
+        },
+        {
+          heading: '3. 使用scikit-learn构建随机森林',
+          content: 'scikit-learn提供了RandomForestRegressor（回归）和RandomForestClassifier（分类）：',
+          code: 'from sklearn.ensemble import RandomForestRegressor\n\n# 创建随机森林回归模型\nrf = RandomForestRegressor(\n    n_estimators=100,  # 树的数量\n    max_depth=None,    # 树的最大深度\n    random_state=42\n)\n\n# 训练模型\nrf.fit(X_train, y_train)\n\n# 预测\ny_pred = rf.predict(X_test)'
+        },
+        {
+          heading: '4. 超参数调优',
+          content: '随机森林有很多重要的超参数需要调整：\n\n1) n_estimators: 树的数量（越多越好，但计算成本越高）\n2) max_depth: 树的最大深度（防止过拟合）\n3) min_samples_split: 分割节点所需的最小样本数\n4) min_samples_leaf: 叶节点所需的最小样本数\n5) max_features: 每棵树使用的特征数量',
+          code: 'from sklearn.model_selection import GridSearchCV\n\nparam_grid = {\n    \'n_estimators\': [50, 100, 150],\n    \'max_depth\': [None, 10, 20, 30],\n    \'min_samples_split\': [2, 5, 10]\n}\n\ngrid_search = GridSearchCV(rf, param_grid, cv=3, scoring=\'r2\')\ngrid_search.fit(X_train, y_train)\n\nprint(f"最佳参数: {grid_search.best_params_}")'
+        },
+        {
+          heading: '5. 特征重要性分析',
+          content: '随机森林可以给出每个特征的重要性得分，这是它的一大优势：',
+          code: '# 获取特征重要性\nfeature_importance = pd.DataFrame({\n    \'特征\': X.columns,\n    \'重要性\': rf.feature_importances_\n}).sort_values(\'重要性\', ascending=False)\n\nprint(feature_importance.round(4))'
+        },
+        {
+          heading: '6. 随机森林 vs 线性回归',
+          content: '随机森林和线性回归的主要区别：\n\n| 特性 | 线性回归 | 随机森林 |\n|------|----------|----------|\n| 假设 | 线性关系 | 无假设 |\n| 非线性 | 不支持 | 支持 |\n| 特征交互 | 需要手动创建 | 自动学习 |\n| 过拟合风险 | 较低 | 较高（需调参） |\n| 可解释性 | 高 | 较低 |\n\n当数据存在复杂的非线性关系时，随机森林通常表现更好。'
+        },
+        {
+          heading: '7. 防止过拟合',
+          content: '随机森林过拟合的常见原因和解决方法：\n\n1) 树太深 → 设置max_depth限制\n2) 叶子节点样本太少 → 设置min_samples_leaf\n3) 树太多 → 增加树数量通常不会导致过拟合\n4) 使用特征太多 → 设置max_features',
+          code: '# 防止过拟合的参数设置\nrf = RandomForestRegressor(\n    n_estimators=100,\n    max_depth=15,           # 限制树深度\n    min_samples_leaf=5,     # 叶节点最少样本数\n    random_state=42\n)'
+        },
+        {
+          heading: '8. 交叉验证',
+          content: '使用交叉验证评估模型的稳定性：',
+          code: 'from sklearn.model_selection import cross_val_score\n\n# 5折交叉验证\nscores = cross_val_score(rf, X, y, cv=5, scoring=\'r2\')\nprint(f"交叉验证R²得分: {scores.round(4)}")\nprint(f"平均R²: {scores.mean():.4f}")'
+        }
+      ]
+    }
   },
   'project-8': {
     id: 'project-8',
@@ -1079,7 +1164,49 @@ print(f"基于最近30天平均的预测: {last_30d_avg:.0f}")`,
       '忽视节假日等特殊因素的影响',
       '没有验证预测结果的准确性',
       '没有处理缺失的时间点'
-    ]
+    ],
+    teachingContent: {
+      title: '时间序列分析核心知识',
+      sections: [
+        {
+          heading: '1. 什么是时间序列',
+          content: '时间序列是按时间顺序排列的数据序列。在数据分析中，时间序列数据具有特殊的性质：\n\n1) 时间顺序性：数据点按时间先后顺序排列\n2) 自相关性：当前时刻的值与过去时刻的值相关\n3) 趋势性：数据随时间呈现上升或下降趋势\n4) 季节性：数据在固定周期内重复出现模式'
+        },
+        {
+          heading: '2. 时间序列的组成部分',
+          content: '一个完整的时间序列通常包含以下组成部分：\n\n1) 趋势(Trend)：长期上升或下降的趋势\n2) 季节性(Seasonality)：周期性的波动\n3) 周期性(Cyclical)：非固定周期的波动\n4) 残差(Residual)：无法解释的随机波动\n\n数学表达式：Y(t) = Trend(t) + Seasonality(t) + Residual(t)'
+        },
+        {
+          heading: '3. Pandas时间序列处理',
+          content: 'Pandas提供了强大的时间序列处理功能：',
+          code: 'import pandas as pd\n\n# 设置日期索引\ndf[\'日期\'] = pd.to_datetime(df[\'日期\'])\ndf.set_index(\'日期\', inplace=True)\n\n# 按时间频率重采样\nmonthly_data = df.resample(\'M\')[\'销量\'].sum()\nweekly_data = df.resample(\'W\')[\'销量\'].mean()\n\n# 移动平均\nrolling_mean = df[\'销量\'].rolling(window=7).mean()'
+        },
+        {
+          heading: '4. 趋势分析方法',
+          content: '常用的趋势分析方法：\n\n1) 移动平均法：使用滑动窗口计算平均值\n2) 指数平滑法：对近期数据赋予更高权重\n3) 线性回归法：用线性模型拟合趋势\n4) 多项式拟合：处理非线性趋势',
+          code: '# 7日和30日移动平均\ndf[\'7日移动平均\'] = df[\'销量\'].rolling(window=7).mean()\ndf[\'30日移动平均\'] = df[\'销量\'].rolling(window=30).mean()\n\n# 指数加权移动平均\ndf[\'EWMA\'] = df[\'销量\'].ewm(span=7).mean()'
+        },
+        {
+          heading: '5. 季节性分析',
+          content: '季节性分析方法：\n\n1) 按月/周分组统计\n2) 计算季节性指数\n3) 使用傅里叶变换检测周期\n4) STL分解（Seasonal-Trend-Loess）',
+          code: '# 按月统计\nmonthly_pattern = df.groupby(df.index.month)[\'销量\'].mean()\n\n# 按星期统计\nweekly_pattern = df.groupby(df.index.dayofweek)[\'销量\'].mean()\n\n# 计算同比增长率\ndf[\'去年同期\'] = df[\'销量\'].shift(365)\ndf[\'同比增长\'] = (df[\'销量\'] - df[\'去年同期\']) / df[\'去年同期\'] * 100'
+        },
+        {
+          heading: '6. 时间序列预测方法',
+          content: '常用的时间序列预测方法：\n\n| 方法 | 适用场景 |\n|------|----------|\n| 移动平均 | 短期预测，数据平稳 |\n| 指数平滑 | 短期预测，有趋势 |\n| ARIMA | 中等复杂度，需要自相关分析 |\n| Prophet | 复杂场景，自动处理趋势和季节性 |\n| LSTM | 深度学习，处理长序列依赖 |',
+          code: '# 简单预测示例\nlast_7d_avg = df[\'销量\'].tail(7).mean()\nlast_30d_avg = df[\'销量\'].tail(30).mean()\n\nprint(f"基于7天平均预测: {last_7d_avg:.0f}")\nprint(f"基于30天平均预测: {last_30d_avg:.0f}")'
+        },
+        {
+          heading: '7. 节假日和特殊事件',
+          content: '时间序列分析中需要特别关注节假日和特殊事件：\n\n1) 识别节假日对数据的影响\n2) 创建虚拟变量表示节假日\n3) 分析促销活动的效果\n4) 考虑周末和工作日的差异',
+          code: '# 创建节假日标记\nholiday = np.zeros(len(df))\nholiday[(df.index.month == 6) & (df.index.day >= 18)] = 1  # 618\nholiday[(df.index.month == 11) & (df.index.day >= 10)] = 1  # 双11\ndf[\'节假日\'] = holiday'
+        },
+        {
+          heading: '8. 时间序列分析流程',
+          content: '完整的时间序列分析流程：\n\n1. 数据收集和清洗\n2. 可视化探索\n3. 趋势分析\n4. 季节性分析\n5. 选择合适的预测模型\n6. 模型训练和验证\n7. 生成预测报告'
+        }
+      ]
+    }
   },
   'project-9': {
     id: 'project-9',
@@ -1194,7 +1321,49 @@ print(anomalies.head(10))`,
       '异常阈值设置不合理',
       '没有验证检测结果的准确性',
       '忽视上下文信息（如用户历史行为）'
-    ]
+    ],
+    teachingContent: {
+      title: '异常检测核心知识',
+      sections: [
+        {
+          heading: '1. 什么是异常检测',
+          content: '异常检测（Outlier Detection）是识别数据集中与大多数数据显著不同的数据点的过程。这些异常点可能代表：\n\n1) 数据错误或噪声\n2) 欺诈行为（如异常交易）\n3) 特殊事件（如突发事件）\n4) 需要关注的异常情况'
+        },
+        {
+          heading: '2. 异常检测方法分类',
+          content: '异常检测方法主要分为三类：\n\n1) 统计方法：基于统计分布检测异常\n2) 距离方法：基于数据点之间的距离\n3) 机器学习方法：使用模型学习正常模式\n\n每种方法都有其适用场景和优缺点。'
+        },
+        {
+          heading: '3. Z-score方法',
+          content: 'Z-score是最常用的统计异常检测方法：',
+          code: 'def detect_outliers_zscore(data, threshold=3):\n    mean = np.mean(data)\n    std = np.std(data)\n    z_scores = (data - mean) / std\n    return np.abs(z_scores) > threshold\n\n# 使用Z-score检测异常\ndf[\'金额异常_zscore\'] = detect_outliers_zscore(df[\'订单金额\'])'
+        },
+        {
+          heading: '4. IQR方法',
+          content: 'IQR（四分位距）方法对极端值不敏感：',
+          code: 'def detect_outliers_iqr(data):\n    Q1 = np.percentile(data, 25)\n    Q3 = np.percentile(data, 75)\n    IQR = Q3 - Q1\n    lower_bound = Q1 - 1.5 * IQR\n    upper_bound = Q3 + 1.5 * IQR\n    return (data < lower_bound) | (data > upper_bound)\n\n# 使用IQR检测异常\ndf[\'金额异常_iqr\'] = detect_outliers_iqr(df[\'订单金额\'])'
+        },
+        {
+          heading: '5. Isolation Forest',
+          content: 'Isolation Forest是一种基于树的异常检测算法：',
+          code: 'from sklearn.ensemble import IsolationForest\n\n# 创建Isolation Forest模型\niso_forest = IsolationForest(\n    contamination=0.01,  # 异常比例\n    random_state=42\n)\n\n# 训练模型并预测\ndf[\'iforest异常\'] = iso_forest.fit_predict(df[[\'订单金额\', \'下单频次\']]) == -1'
+        },
+        {
+          heading: '6. 业务规则检测',
+          content: '结合业务知识定义规则：',
+          code: '# 业务规则示例\nrules_anomaly = (\n    (df[\'订单金额\'] > 10000) |\n    (df[\'下单频次\'] > 50) |\n    (df[\'支付状态\'] == \'未支付\') & (df[\'订单金额\'] > 1000)\n)\ndf[\'规则异常\'] = rules_anomaly'
+        },
+        {
+          heading: '7. 综合异常检测',
+          content: '结合多种方法进行综合检测：',
+          code: '# 综合多种检测方法\ndf[\'综合异常\'] = (\n    df[\'金额异常_zscore\'] |\n    df[\'金额异常_iqr\'] |\n    df[\'iforest异常\'] |\n    df[\'规则异常\']\n)\n\n# 分析异常订单\nanomalies = df[df[\'综合异常\']]\nprint(f"检测到异常订单数量: {len(anomalies)}")'
+        },
+        {
+          heading: '8. 异常检测评估',
+          content: '评估异常检测效果：\n\n1) 精确率(Precision)：检测出的异常中真正异常的比例\n2) 召回率(Recall)：真正异常中被检测出的比例\n3) F1-score：精确率和召回率的调和平均\n\n由于异常数据通常很少，需要特别注意评估指标的选择。'
+        }
+      ]
+    }
   },
   'project-10': {
     id: 'project-10',
@@ -1323,7 +1492,49 @@ print("=" * 60)`,
       '分析方法单一',
       '没有结合业务场景',
       '报告缺乏结论和建议'
-    ]
+    ],
+    teachingContent: {
+      title: '数据分析综合实战指南',
+      sections: [
+        {
+          heading: '1. 数据分析项目流程',
+          content: '一个完整的数据分析项目通常包含以下步骤：\n\n1) 理解业务需求\n2) 数据收集和整理\n3) 数据清洗和预处理\n4) 探索性数据分析(EDA)\n5) 特征工程和建模\n6) 结果分析和可视化\n7) 撰写分析报告\n\n每个步骤都至关重要，缺一不可。'
+        },
+        {
+          heading: '2. 明确分析目标',
+          content: '开始分析前，必须明确目标：\n\n1) 业务问题是什么？\n2) 需要回答哪些具体问题？\n3) 分析结果将如何被使用？\n4) 成功的标准是什么？\n\n明确的目标能帮助您聚焦分析方向，避免迷失在数据中。'
+        },
+        {
+          heading: '3. 数据收集和整理',
+          content: '数据收集阶段需要：\n\n1) 确定数据来源\n2) 评估数据质量\n3) 收集所需数据\n4) 整理数据格式\n5) 建立数据字典\n\n良好的数据准备是成功分析的基础。',
+          code: '# 数据收集示例\nimport pandas as pd\nimport numpy as np\n\n# 加载数据\ndf = pd.read_csv(\'user_behavior.csv\')\n\n# 数据字典\ndata_dict = {\n    \'用户ID\': \'用户唯一标识\',\n    \'消费金额\': \'用户消费金额(元)\',\n    \'消费频次\': \'消费次数\',\n    \'最近消费天数\': \'距离上次消费的天数\',\n    \'注册时间\': \'用户注册日期\',\n    \'浏览时长\': \'平均浏览时长(分钟)\'\n}'
+        },
+        {
+          heading: '4. 数据清洗最佳实践',
+          content: '数据清洗的关键步骤：\n\n1) 缺失值处理（删除、填充、插值）\n2) 异常值检测和处理\n3) 重复值处理\n4) 数据类型转换\n5) 格式标准化\n6) 数据验证',
+          code: '# 数据清洗流程\ndf_clean = df.copy()\n\n# 处理缺失值\ndf_clean[\'消费金额\'] = df_clean[\'消费金额\'].fillna(df_clean[\'消费金额\'].median())\ndf_clean[\'性别\'] = df_clean[\'性别\'].fillna(\'未知\')\n\n# 删除无效行\ndf_clean = df_clean.dropna(subset=[\'注册时间\'])\n\n# 去除重复值\ndf_clean = df_clean.drop_duplicates()\n\n# 数据类型转换\ndf_clean[\'注册时间\'] = pd.to_datetime(df_clean[\'注册时间\'])'
+        },
+        {
+          heading: '5. 探索性数据分析(EDA)',
+          content: 'EDA的主要任务：\n\n1) 数据概览（info、describe、head）\n2) 单变量分析（分布、统计量）\n3) 多变量分析（相关性、交叉表）\n4) 可视化展示（图表）\n5) 发现数据规律和问题',
+          code: '# EDA示例\nprint("数据概览:")\nprint(df_clean.info())\n\nprint("\\n描述统计:")\nprint(df_clean.describe())\n\nprint("\\n相关性分析:")\ncorr_matrix = df_clean[[\'消费金额\', \'消费频次\', \'浏览时长\']].corr()\nprint(corr_matrix.round(2))'
+        },
+        {
+          heading: '6. 用户画像分析',
+          content: '用户画像分析方法：\n\n1) 人口统计学特征分析\n2) 用户行为特征分析\n3) 用户价值分层（RFM模型）\n4) 用户分群（聚类分析）\n5) 用户生命周期分析',
+          code: '# 用户画像分析\nprint("性别分布:")\nprint(df_clean[\'性别\'].value_counts())\n\nprint("\\n地区分布:")\nprint(df_clean[\'地区\'].value_counts().head(5))\n\nprint("\\n消费金额按性别统计:")\ngender_stats = df_clean.groupby(\'性别\')[\'消费金额\'].mean().round(2)\nprint(gender_stats)'
+        },
+        {
+          heading: '7. RFM用户分层',
+          content: 'RFM模型是经典的用户价值评估方法：\n\n- R(Recency): 最近消费时间\n- F(Frequency): 消费频次\n- M(Monetary): 消费金额\n\n通过RFM评分，可以将用户分为不同价值层级。',
+          code: '# RFM评分\ndf_rfm = df_clean.copy()\n\n# R评分（越小越好，反转）\ndf_rfm[\'R_score\'] = pd.qcut(df_rfm[\'最近消费天数\'], q=5, labels=[5, 4, 3, 2, 1])\n\n# F评分（越大越好）\ndf_rfm[\'F_score\'] = pd.qcut(df_rfm[\'消费频次\'].rank(method=\'first\'), q=5, labels=[1, 2, 3, 4, 5])\n\n# M评分（越大越好）\ndf_rfm[\'M_score\'] = pd.qcut(df_rfm[\'消费金额\'], q=5, labels=[1, 2, 3, 4, 5])'
+        },
+        {
+          heading: '8. 撰写数据分析报告',
+          content: '一份好的分析报告应该包含：\n\n1) 报告标题和背景\n2) 分析目标\n3) 数据说明\n4) 分析方法\n5) 分析结果（图表+文字）\n6) 结论和建议\n7) 附录（数据来源、代码等）\n\n报告应该清晰、简洁、有说服力。'
+        }
+      ]
+    }
   }
 };
 
