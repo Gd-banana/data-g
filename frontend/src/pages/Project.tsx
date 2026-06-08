@@ -208,7 +208,7 @@ print("\\n========== 8. 最终数据概览 ==========")
 print("数值型字段描述统计:")
 print(df_clean.describe().round(2))
 print("\\n非数值型字段描述统计:")
-print(df_clean.describe(include=['object', 'datetime64']).round(2))`
+print(df_clean.describe(include=['object', 'datetime64']).round(2))`,
     pitfalls: [
       '直接使用dropna()删除所有含缺失值的行，导致数据量大幅减少',
       '忽视异常值的存在，直接进行后续分析',
@@ -366,7 +366,49 @@ print(rating_groups)`,
       '没有检查变量之间的相关性',
       '图表过于复杂，难以解读',
       '没有对异常值进行标注和分析'
-    ]
+    ],
+    teachingContent: {
+      title: '探索性数据分析核心知识',
+      sections: [
+        {
+          heading: '1. 什么是EDA',
+          content: '探索性数据分析（Exploratory Data Analysis, EDA）是数据分析的第一步。它的目的是：\n\n1) 理解数据的基本结构\n2) 发现数据中的模式和规律\n3) 识别数据质量问题\n4) 提出进一步分析的假设\n5) 为后续建模做准备'
+        },
+        {
+          heading: '2. EDA的主要步骤',
+          content: 'EDA通常包含以下步骤：\n\n1) 数据概览（数据类型、维度、基本统计）\n2) 缺失值分析\n3) 单变量分析（分布、统计量）\n4) 多变量分析（相关性、交叉分析）\n5) 可视化探索\n6) 异常值检测'
+        },
+        {
+          heading: '3. 数据概览',
+          content: '首先了解数据的基本情况：',
+          code: 'import pandas as pd\nimport numpy as np\n\n# 查看数据基本信息\nprint(df.info())\n\n# 查看前几行数据\nprint(df.head())\n\n# 描述统计\nprint(df.describe())\n\n# 查看数据形状\nprint(f"数据形状: {df.shape}")\nprint(f"列数: {len(df.columns)}")'
+        },
+        {
+          heading: '4. 缺失值分析',
+          content: '缺失值是数据中常见的问题：',
+          code: '# 统计缺失值数量\nmissing_stats = df.isnull().sum()\nprint("缺失值数量:")\nprint(missing_stats)\n\n# 只显示有缺失值的列\nprint("\\n有缺失值的列:")\nprint(missing_stats[missing_stats > 0])\n\n# 缺失值占比\nmissing_ratio = (missing_stats / len(df)) * 100\nprint("\\n缺失值占比:")\nprint(missing_ratio[missing_ratio > 0].round(2))'
+        },
+        {
+          heading: '5. 单变量分析',
+          content: '分析单个变量的分布特征：',
+          code: '# 数值型变量分析\nprint("销量描述统计:")\nprint(df[\'销量\'].describe())\n\n# 分类变量分析\nprint("\\n地区分布:")\nprint(df[\'地区\'].value_counts())\n\n# 频率分布\nprint("\\n销量频率分布:")\nprint(df[\'销量\'].value_counts(bins=10))'
+        },
+        {
+          heading: '6. 相关性分析',
+          content: '分析变量之间的关系：',
+          code: '# 计算相关系数矩阵\ncorr_matrix = df[[\'销量\', \'客单价\', \'好评率\', \'库存\']].corr()\nprint("相关系数矩阵:")\nprint(corr_matrix.round(2))\n\n# 散点图分析（文字描述）\nprint("\\n相关性解读:")\nprint("- 销量与客单价的相关系数: {:.2f}".format(corr_matrix.loc[\'销量\', \'客单价\']))\nprint("- 销量与好评率的相关系数: {:.2f}".format(corr_matrix.loc[\'销量\', \'好评率\']))'
+        },
+        {
+          heading: '7. 分组分析',
+          content: '按类别分组分析：',
+          code: '# 按好评率分组分析\nrating_groups = df.groupby(pd.cut(df[\'好评率\'], bins=[0.7, 0.8, 0.9, 1.0]))\n\n# 计算各组统计量\ngroup_stats = rating_groups[\'销量\'].agg([\'mean\', \'count\', \'std\'])\nprint("按好评率分组的销量统计:")\nprint(group_stats.round(2))\n\n# 交叉表分析\nprint("\\n性别与购买频次交叉分析:")\ncross_tab = pd.crosstab(df[\'性别\'], df[\'消费频次\'])'
+        },
+        {
+          heading: '8. EDA可视化技巧',
+          content: '可视化是EDA的重要工具：\n\n1) 直方图：展示数值分布\n2) 箱线图：展示数据分布和异常值\n3) 散点图：展示变量关系\n4) 柱状图：展示分类数据\n5) 热力图：展示相关性矩阵\n\n好的可视化应该简洁、清晰、有信息量。'
+        }
+      ]
+    }
   },
   'project-3': {
     id: 'project-3',
@@ -517,7 +559,49 @@ print(rules_df.head(10).round(4))`,
       '没有考虑规则的实际业务意义',
       '对大规模数据集直接使用Apriori导致性能问题',
       '没有处理稀疏数据问题'
-    ]
+    ],
+    teachingContent: {
+      title: '关联规则挖掘核心知识',
+      sections: [
+        {
+          heading: '1. 什么是关联规则',
+          content: '关联规则挖掘是数据挖掘的重要技术，用于发现数据集中项目之间的关联关系。最经典的应用场景是购物篮分析，发现顾客购买商品之间的关联。\n\n例如："购买牛奶的顾客有80%也会购买面包"。'
+        },
+        {
+          heading: '2. 关联规则的核心概念',
+          content: '关联规则有三个核心指标：\n\n1) 支持度(Support)：项集在数据集中出现的频率\n   Support(X) = 包含X的事务数 / 总事务数\n\n2) 置信度(Confidence)：在购买X的情况下购买Y的概率\n   Confidence(X→Y) = Support(X∪Y) / Support(X)\n\n3) 提升度(Lift)：购买X对购买Y的提升效果\n   Lift(X→Y) = Confidence(X→Y) / Support(Y)'
+        },
+        {
+          heading: '3. Apriori算法原理',
+          content: 'Apriori算法是最经典的关联规则挖掘算法：\n\n1) 生成所有可能的项集\n2) 筛选出支持度大于最小阈值的项集（频繁项集）\n3) 从频繁项集中生成关联规则\n4) 筛选出置信度和提升度满足条件的规则\n\nApriori原理：如果一个项集是频繁的，那么它的所有子集也是频繁的。',
+          code: '# Apriori算法伪代码\n# 1. 生成1项频繁项集\n# 2. 循环：\n#    从k项频繁项集生成k+1项候选集\n#    剪枝：去除包含非频繁子集的候选集\n#    计算支持度，筛选频繁项集\n# 3. 生成关联规则'
+        },
+        {
+          heading: '4. 数据格式转换',
+          content: '关联规则挖掘需要事务格式的数据：',
+          code: '# 将购物车数据转换为事务格式\n# 原始格式：每行是一个订单中的一个商品\n# 转换后：每行是一个订单的所有商品列表\n\n# 示例代码\ntransactions = df.groupby(\'订单ID\')[\'商品名称\'].apply(list).tolist()\n\nprint(f"事务数量: {len(transactions)}")\nprint(f"前3个事务示例:")\nfor i in range(min(3, len(transactions))):\n    print(f"  {i+1}. {transactions[i]}")'
+        },
+        {
+          heading: '5. 商品共现分析',
+          content: '分析商品之间的共现关系：',
+          code: '# 创建商品共现矩阵\nall_products = df[\'商品名称\'].unique()\ncooccurrence = pd.DataFrame(0, index=all_products, columns=all_products)\n\nfor transaction in transactions:\n    for i, item1 in enumerate(transaction):\n        for j, item2 in enumerate(transaction):\n            if i != j:\n                cooccurrence.loc[item1, item2] += 1\n\nprint("商品共现矩阵(前5行5列):")\nprint(cooccurrence.iloc[:5, :5])'
+        },
+        {
+          heading: '6. 支持度计算',
+          content: '计算商品的支持度：',
+          code: '# 计算支持度\nsupport = df[\'商品名称\'].value_counts() / len(transactions)\n\nprint("商品支持度排行(前10):")\nprint(support.sort_values(ascending=False).head(10).round(4))\n\n# 设置最小支持度阈值\nmin_support = 0.02\npopular_items = support[support >= min_support].index.tolist()\nprint(f"\\n支持度 >= {min_support} 的商品数量: {len(popular_items)}")'
+        },
+        {
+          heading: '7. 发现强关联规则',
+          content: '发现有意义的关联规则：',
+          code: '# 简单的关联规则发现\nrules = []\nfor item1 in popular_items:\n    for item2 in popular_items:\n        if item1 != item2:\n            # 同时购买item1和item2的事务数\n            both = len([t for t in transactions if item1 in t and item2 in t])\n            # 购买item1的事务数\n            item1_only = len([t for t in transactions if item1 in t])\n            \n            if item1_only > 0:\n                confidence = both / item1_only\n                support_both = both / len(transactions)\n                \n                if confidence > 0.1 and support_both > 0.01:\n                    rules.append({\n                        \'antecedent\': item1,\n                        \'consequent\': item2,\n                        \'support\': support_both,\n                        \'confidence\': confidence\n                    })\n\nrules_df = pd.DataFrame(rules).sort_values(\'confidence\', ascending=False)\nprint(f"发现的关联规则数量: {len(rules_df)}")'
+        },
+        {
+          heading: '8. 业务应用场景',
+          content: '关联规则的应用场景：\n\n1) 购物篮分析：商品推荐、捆绑销售\n2) 网页推荐：页面关联分析\n3) 医疗诊断：症状与疾病关联\n4) 欺诈检测：异常行为模式\n\n在业务决策中，提升度大于1的规则才具有实际意义。'
+        }
+      ]
+    }
   },
   'project-4': {
     id: 'project-4',
@@ -624,7 +708,49 @@ print(cluster_names)`,
       '忽略异常值对聚类结果的影响',
       '只关注聚类结果，不分析每个簇的特征',
       '特征选择不当，包含无关或冗余特征'
-    ]
+    ],
+    teachingContent: {
+      title: 'KMeans聚类分析核心知识',
+      sections: [
+        {
+          heading: '1. 什么是聚类分析',
+          content: '聚类分析是一种无监督学习方法，用于将数据集中的样本分成若干个组（簇），使得同一簇内的样本相似度尽可能高，不同簇之间的相似度尽可能低。\n\n常见应用场景：客户分群、市场细分、图像分割、异常检测等。'
+        },
+        {
+          heading: '2. KMeans算法原理',
+          content: 'KMeans是最常用的聚类算法之一：\n\n1) 随机选择K个初始质心\n2) 计算每个样本到各个质心的距离\n3) 将样本分配到距离最近的质心所在的簇\n4) 更新每个簇的质心（计算簇内所有样本的均值）\n5) 重复步骤2-4，直到质心不再变化或达到最大迭代次数'
+        },
+        {
+          heading: '3. 数据标准化',
+          content: 'KMeans对特征的尺度非常敏感，必须先标准化：',
+          code: 'from sklearn.preprocessing import StandardScaler\n\n# 选择特征\nfeatures = df[[\'消费金额\', \'消费频次\', \'最近消费天数\', \'浏览时长\']]\n\n# 标准化数据\nscaler = StandardScaler()\nscaled_features = scaler.fit_transform(features)\n\nprint("标准化后数据的均值:", scaled_features.mean(axis=0).round(2))\nprint("标准化后数据的标准差:", scaled_features.std(axis=0).round(2))'
+        },
+        {
+          heading: '4. 确定最佳K值-肘部法则',
+          content: '肘部法则是确定K值的常用方法：',
+          code: '# 使用肘部法则确定最佳K值\ninertia = []\nk_range = range(2, 10)\n\nfor k in k_range:\n    kmeans = KMeans(n_clusters=k, random_state=42)\n    kmeans.fit(scaled_features)\n    inertia.append(kmeans.inertia_)  # 簇内平方和\n\nprint("K值对应的惯性值:")\nfor k, val in zip(k_range, inertia):\n    print(f"K={k}: {val:.2f}")\n\n# 肘部点：惯性值下降速度明显减缓的点'
+        },
+        {
+          heading: '5. 执行KMeans聚类',
+          content: '使用KMeans进行聚类：',
+          code: 'from sklearn.cluster import KMeans\n\n# 创建并训练KMeans模型\nkmeans = KMeans(n_clusters=4, random_state=42)\ndf[\'聚类标签\'] = kmeans.fit_predict(scaled_features)\n\n# 查看各聚类数量分布\nprint("各聚类数量分布:")\nprint(df[\'聚类标签\'].value_counts())'
+        },
+        {
+          heading: '6. 分析聚类特征',
+          content: '分析每个簇的特征：',
+          code: '# 分析各聚类特征\ncluster_analysis = df.groupby(\'聚类标签\')[[\n    \'消费金额\', \'消费频次\', \'最近消费天数\', \'浏览时长\'\n]].mean()\n\nprint("各聚类均值:")\nprint(cluster_analysis.round(2))'
+        },
+        {
+          heading: '7. 聚类命名',
+          content: '根据聚类特征为每个簇命名：',
+          code: '# 为聚类命名\ncluster_names = {}\nfor cluster in range(4):\n    row = cluster_analysis.loc[cluster]\n    if row[\'消费金额\'] > 300 and row[\'消费频次\'] > 8:\n        cluster_names[cluster] = \'高价值活跃用户\'\n    elif row[\'消费金额\'] > 200 and row[\'最近消费天数\'] < 30:\n        cluster_names[cluster] = \'潜力用户\'\n    elif row[\'消费频次\'] < 2:\n        cluster_names[cluster] = \'沉睡用户\'\n    else:\n        cluster_names[cluster] = \'普通用户\'\n\nprint(cluster_names)'
+        },
+        {
+          heading: '8. 聚类评估方法',
+          content: '评估聚类效果的方法：\n\n1) 惯性值(Inertia)：簇内样本到质心的距离平方和，越小越好\n2) 轮廓系数(Silhouette Score)：衡量样本与同簇样本的相似度和与其他簇样本的差异，范围[-1,1]\n3) Calinski-Harabasz指数：类间方差与类内方差的比值，越大越好\n\n选择K值时，综合考虑肘部法则和轮廓系数。'
+        }
+      ]
+    }
   },
   'project-5': {
     id: 'project-5',
@@ -722,7 +848,49 @@ print(level_analysis.round(2))`,
       '用户分层规则过于简单，没有考虑实际业务场景',
       '只关注RFM评分，忽略用户的其他属性',
       '没有定期更新RFM评分'
-    ]
+    ],
+    teachingContent: {
+      title: 'RFM模型用户分层核心知识',
+      sections: [
+        {
+          heading: '1. 什么是RFM模型',
+          content: 'RFM模型是一种经典的用户价值评估方法，通过三个维度评估用户价值：\n\n- R(Recency): 最近一次消费的时间（越小越好）\n- F(Frequency): 消费频次（越大越好）\n- M(Monetary): 消费金额（越大越好）\n\nRFM模型广泛应用于客户关系管理和精准营销。'
+        },
+        {
+          heading: '2. RFM指标计算',
+          content: '计算RFM三个指标：',
+          code: '# RFM指标计算示例\nimport pandas as pd\nimport numpy as np\n\n# 假设已有用户行为数据\ndf_rfm = df.copy()\n\nprint("RFM数据前5行:")\nprint(df_rfm[[\'用户ID\', \'最近消费天数\', \'消费频次\', \'消费金额\']].head())\n\nprint("\\nRFM指标描述统计:")\nprint(df_rfm[[\'最近消费天数\', \'消费频次\', \'消费金额\']].describe())'
+        },
+        {
+          heading: '3. RFM评分方法',
+          content: '将RFM指标转换为评分（通常1-5分）：',
+          code: '# RFM评分(1-5分)\n# R(最近消费天数)：越小越好，所以反转\n(df_rfm[\'R_score\'] = pd.qcut(df_rfm[\'最近消费天数\'], q=5, labels=[5, 4, 3, 2, 1])\n\n# F(消费频次)：越大越好\n(df_rfm[\'F_score\'] = pd.qcut(df_rfm[\'消费频次\'].rank(method=\'first\'), q=5, labels=[1, 2, 3, 4, 5])\n\n# M(消费金额)：越大越好\n(df_rfm[\'M_score\'] = pd.qcut(df_rfm[\'消费金额\'], q=5, labels=[1, 2, 3, 4, 5])\n\n# 转换为整数类型\ndf_rfm[[\'R_score\', \'F_score\', \'M_score\']] = df_rfm[[\'R_score\', \'F_score\', \'M_score\']].astype(int)\n\nprint("RFM评分示例:")\nprint(df_rfm[[\'用户ID\', \'R_score\', \'F_score\', \'M_score\']].head())'
+        },
+        {
+          heading: '4. RFM总分计算',
+          content: '计算RFM总分和平均值：',
+          code: '# 计算RFM总分\ndf_rfm[\'RFM_total\'] = df_rfm[\'R_score\'] + df_rfm[\'F_score\'] + df_rfm[\'M_score\']\n\nprint(f"RFM总分范围: {df_rfm[\'RFM_total\'].min()} - {df_rfm[\'RFM_total\'].max()}")\n\n# 计算RFM均值\ndf_rfm[\'RFM_avg\'] = df_rfm[\'RFM_total\'] / 3\n\nprint("\\nRFM总分分布:")\nprint(df_rfm[\'RFM_total\'].value_counts().sort_index())'
+        },
+        {
+          heading: '5. 用户分层规则',
+          content: '根据RFM评分进行用户分层：',
+          code: '# 用户分层函数\ndef get_rfm_level(row):\n    if row[\'R_score\'] >= 4 and row[\'F_score\'] >= 4 and row[\'M_score\'] >= 4:\n        return \'重要价值用户\'\n    elif row[\'R_score\'] >= 4 and row[\'F_score\'] < 4 and row[\'M_score\'] >= 4:\n        return \'重要发展用户\'\n    elif row[\'R_score\'] < 4 and row[\'F_score\'] >= 4 and row[\'M_score\'] >= 4:\n        return \'重要保持用户\'\n    elif row[\'R_score\'] < 4 and row[\'F_score\'] < 4 and row[\'M_score\'] >= 4:\n        return \'重要挽留用户\'\n    elif row[\'R_score\'] >= 4 and row[\'F_score\'] >= 4 and row[\'M_score\'] < 4:\n        return \'潜力用户\'\n    else:\n        return \'一般用户\'\n\ndf_rfm[\'用户层级\'] = df_rfm.apply(get_rfm_level, axis=1)\n\nprint("各层级用户数量:")\nprint(df_rfm[\'用户层级\'].value_counts())'
+        },
+        {
+          heading: '6. 各层级特征分析',
+          content: '分析不同层级用户的特征：',
+          code: '# 各层级特征分析\nlevel_analysis = df_rfm.groupby(\'用户层级\')[[\n    \'最近消费天数\', \'消费频次\', \'消费金额\'\n]].mean()\n\nprint("各层级RFM均值:")\nprint(level_analysis.round(2))'
+        },
+        {
+          heading: '7. 用户分层运营策略',
+          content: '针对不同层级用户制定运营策略：\n\n| 用户层级 | 特征 | 运营策略 |\n|----------|------|----------|\n| 重要价值用户 | R高F高M高 | VIP服务、专属优惠、个性化推荐 |\n| 重要发展用户 | R高F低M高 | 提升复购率、增加互动 |\n| 重要保持用户 | R低F高M高 | 激活沉睡用户、挽回流失风险 |\n| 重要挽留用户 | R低F低M高 | 重点挽回、专属福利 |\n| 潜力用户 | R高F高M低 | 促进消费升级 |\n| 一般用户 | 其他 | 标准化运营、提升活跃度 |'
+        },
+        {
+          heading: '8. RFM模型的注意事项',
+          content: '使用RFM模型时需要注意：\n\n1) 评分方法：除了分位数法，还可以使用等距法或自定义规则\n2) 周期更新：RFM评分需要定期更新（如每月更新）\n3) 结合其他数据：可以结合用户画像、行为偏好等数据\n4) 业务验证：分层规则需要结合实际业务场景验证\n5) 个性化运营：根据分层结果制定差异化运营策略'
+        }
+      ]
+    }
   },
   'project-6': {
     id: 'project-6',
