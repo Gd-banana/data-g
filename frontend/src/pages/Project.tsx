@@ -1,6 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Editor from '@monaco-editor/react';
+import Editor, { loader } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor';
+import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+
+if (typeof window !== 'undefined') {
+  (window as any).MonacoEnvironment = {
+    getWorker(_workerId: string, _label: string) {
+      return new editorWorker();
+    },
+  };
+}
+
+loader.config({ monaco });
 
 let initPyodide: () => Promise<any>;
 

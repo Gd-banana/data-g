@@ -8,4 +8,10 @@ export default defineConfig({
       '@': '/src',
     },
   },
+  optimizeDeps: {
+    include: ['monaco-editor', '@monaco-editor/react'],
+  },
+  worker: {
+    format: 'es',
+  },
 });
