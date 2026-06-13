@@ -38,11 +38,17 @@ export const initPyodide = async (): Promise<any> => {
       'scikit-learn'
     ]);
 
-    // 使用 micropip 安装 seaborn
-    await pyodideInstance.runPythonAsync(`
+    // 使用 micropip 安装 seaborn (可选，用户代码可能需要)
+    try {
+      await pyodideInstance.runPythonAsync(`
+import asyncio
 import micropip
-await micropip.install('seaborn')
-    `);
+await micropip.install(['seaborn'])
+      `);
+      console.log('Seaborn installed successfully');
+    } catch (e) {
+      console.warn('Seaborn installation failed, some features may not work:', e);
+    }
 
     isInitialized = true;
     console.log('Pyodide initialized successfully with pandas, numpy, matplotlib, scipy, scikit-learn, seaborn');
