@@ -2135,6 +2135,113 @@ df.to_csv('/tmp/dataset.csv', index=False, encoding='utf-8-sig')
     runCodeRef.current = runCode;
   }, [runCode]);
 
+  const runCodeDirectly = useCallback(async (codeToRun: string) => {
+    setIsRunning(true);
+    setOutput('正在加载Python环境和数据分析库...\n\n提示：首次加载可能需要 30-60 秒，请耐心等待\n');
+
+    try {
+      await loadPyodideModule();
+      const pyodide = await initPyodide((msg, percent) => {
+        setOutput(prev => prev + '\n' + msg);
+        if (percent !== undefined) setPyodidePercent(percent);
+      });
+
+      if (!pyodide) {
+        throw new Error('Python环境加载失败');
+      }
+
+      setOutput(prev => prev + '\n环境加载完成，正在执行参考代码...\n\n');
+
+      let generatedCode = codeToRun;
+      Object.entries(dataParams).forEach(([key, value]) => {
+        const regex = new RegExp(`\\b${key}\\s*=\\s*\\d+`, 'g');
+        generatedCode = generatedCode.replace(regex, `${key} = ${value}`);
+      });
+
+      pyodide.globals.set('user_code', generatedCode);
+
+      const wrappedCode = [
+        'import sys',
+        'import ast',
+        'import re',
+        '',
+        'class OutputCapture:',
+        '    def __init__(self):',
+        '        self.buffer = []',
+        '    def write(self, text):',
+        '        self.buffer.append(text)',
+        '    def flush(self):',
+        '        pass',
+        '    def getvalue(self):',
+        '        return \'\'.join(self.buffer)',
+        '',
+        'old_stdout = sys.stdout',
+        'sys.stdout = OutputCapture()',
+        'output_result = ""',
+        '',
+        'try:',
+        '    code = user_code',
+        '    code_lines = [line.strip() for line in code.splitlines() if line.strip()]',
+        '',
+        '    syntax_ok = True',
+        '    try:',
+        '        ast.parse(code)',
+        '    except SyntaxError as e:',
+        '        print(f"语法错误: {e}")',
+        '        syntax_ok = False',
+        '',
+        '    if syntax_ok:',
+        '        has_real_code = False',
+        '        for line in code_lines:',
+        '            if not line.startswith(\'#\') and len(line) > 0:',
+        '                has_real_code = True',
+        '                break',
+        '',
+        '        if not has_real_code:',
+        '            print("提示: 检测到只有注释或空行，请编写实际的Python代码")',
+        '        else:',
+        '            exec(code)',
+        '            last_line = code_lines[-1] if code_lines else None',
+        '            if last_line and not last_line.startswith(\'#\') and not last_line.startswith(\'print(\'):',
+        '                try:',
+        '                    result = eval(last_line)',
+        '                    if result is not None:',
+        '                        print(result)',
+        '                except:',
+        '                    pass',
+        '',
+        '    captured_output = sys.stdout.getvalue()',
+        '    if captured_output.strip():',
+        '        output_result = captured_output',
+        '    else:',
+        '        output_result = "代码执行完成，但没有输出内容。请在代码中添加 print() 语句来查看结果。"',
+        '',
+        'except SyntaxError as e:',
+        '    output_result = f"语法错误: {e}"',
+        'except Exception as e:',
+        '    output_result = f"执行错误: {type(e).__name__}: {str(e)}"',
+        'finally:',
+        '    sys.stdout = old_stdout',
+        '',
+        'output_result',
+        ''
+      ].join('\n');
+
+      const result = await pyodide.runPythonAsync(wrappedCode);
+
+      if (result !== undefined && result !== null && String(result).trim()) {
+        setOutput(String(result));
+      } else {
+        setOutput('代码执行完成，但没有输出内容');
+      }
+    } catch (error) {
+      console.error('Python execution error:', error);
+      setOutput(`执行错误: ${error}\n\n提示: 请检查代码语法是否正确`);
+    } finally {
+      setIsRunning(false);
+    }
+  }, [dataParams]);
+
   if (!projectData) {
     return (
       <div className="min-h-screen pt-16 bg-dark-900">
@@ -2429,11 +2536,10 @@ df.to_csv('/tmp/dataset.csv', index=False, encoding='utf-8-sig')
                       </button>
                       <button
                         onClick={() => {
-                          setCode(projectData.referenceCode);
+                          const codeToRun = projectData.referenceCode;
+                          setCode(codeToRun);
                           setActiveTab('code-editor');
-                          setTimeout(() => {
-                            runCodeRef.current();
-                          }, 100);
+                          runCodeDirectly(codeToRun);
                         }}
                         className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center gap-1"
                       >
