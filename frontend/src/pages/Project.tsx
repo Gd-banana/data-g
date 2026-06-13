@@ -14,7 +14,7 @@ if (typeof window !== 'undefined') {
 
 loader.config({ monaco });
 
-let initPyodide: (onProgress?: (msg: string) => void) => Promise<any>;
+let initPyodide: (onProgress?: (msg: string, percent?: number) => void) => Promise<any>;
 
 async function loadPyodideModule() {
   const module = await import('../utils/pyodide');
@@ -1832,6 +1832,7 @@ function Project(_props: ProjectProps) {
   const [activeTab, setActiveTab] = useState('description');
   const [pyodideReady, setPyodideReady] = useState(false);
   const [pyodideProgress, setPyodideProgress] = useState<string>('点击"运行代码"开始加载环境...');
+  const [pyodidePercent, setPyodidePercent] = useState<number>(0);
 
   useEffect(() => {
     if (projectData) {
@@ -1851,12 +1852,14 @@ function Project(_props: ProjectProps) {
     const initPyodideWorker = async () => {
       try {
         await loadPyodideModule();
-        const pyodide = await initPyodide((msg) => {
+        const pyodide = await initPyodide((msg, percent) => {
           setPyodideProgress(msg);
+          if (percent !== undefined) setPyodidePercent(percent);
         });
         if (pyodide) {
           setPyodideReady(true);
-          setPyodideProgress('环境准备就绪！');
+          setPyodidePercent(100);
+          setPyodideProgress('✅ 环境准备就绪！');
         }
       } catch (error) {
         console.error('Pyodide initialization failed:', error);
@@ -1883,8 +1886,9 @@ function Project(_props: ProjectProps) {
   const downloadDataset = async () => {
     try {
       await loadPyodideModule();
-      const pyodide = await initPyodide((msg) => {
+      const pyodide = await initPyodide((msg, percent) => {
         setPyodideProgress(msg);
+        if (percent !== undefined) setPyodidePercent(percent);
       });
 
       if (!pyodide) {
@@ -2028,8 +2032,9 @@ df.to_csv('/tmp/dataset.csv', index=False, encoding='utf-8-sig')
 
     try {
       await loadPyodideModule();
-      const pyodide = await initPyodide((msg) => {
+      const pyodide = await initPyodide((msg, percent) => {
         setOutput(prev => prev + '\n' + msg);
+        if (percent !== undefined) setPyodidePercent(percent);
       });
 
       if (!pyodide) {
@@ -2294,7 +2299,18 @@ df.to_csv('/tmp/dataset.csv', index=False, encoding='utf-8-sig')
                   </button>
                 </div>
                 {!pyodideReady && !isRunning && (
-                  <p className="text-gray-400 text-sm mt-2">首次运行需要加载Python环境，请稍候... {pyodideProgress}</p>
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="text-gold-400">{pyodideProgress}</span>
+                      <span className="text-gold-500 font-semibold">{pyodidePercent}%</span>
+                    </div>
+                    <div className="h-2 bg-dark-700 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-gold-500 to-gold-400 transition-all duration-500 ease-out"
+                        style={{ width: `${Math.max(pyodidePercent, 3)}%` }}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
             )}
@@ -2334,9 +2350,27 @@ df.to_csv('/tmp/dataset.csv', index=False, encoding='utf-8-sig')
                     <span className="text-gray-400 text-sm">运行结果</span>
                   </div>
                   <div className="p-4 min-h-[200px]">
-                    <pre className="text-gray-300 font-mono text-sm whitespace-pre-wrap">
-                      {output || (pyodideReady ? '点击"运行代码"执行代码...' : pyodideProgress)}
-                    </pre>
+                    {!pyodideReady && !isRunning ? (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gold-400">{pyodideProgress}</span>
+                          <span className="text-gold-500 font-semibold">{pyodidePercent}%</span>
+                        </div>
+                        <div className="h-2 bg-dark-700 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-gold-500 to-gold-400 transition-all duration-500 ease-out"
+                            style={{ width: `${Math.max(pyodidePercent, 3)}%` }}
+                          />
+                        </div>
+                        <p className="text-gray-500 text-xs text-center">
+                          浏览器正在下载Python环境和数据分析库，这是一次性的加载
+                        </p>
+                      </div>
+                    ) : (
+                      <pre className="text-gray-300 font-mono text-sm whitespace-pre-wrap">
+                        {output || '点击上方"运行代码"按钮执行分析...'}
+                      </pre>
+                    )}
                   </div>
                 </div>
               </div>
