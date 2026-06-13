@@ -736,14 +736,18 @@ print("各聚类均值:")
 print(cluster_analysis.round(2))
 
 print("\\n========== 5. 聚类命名建议 ==========")
+amount_median = df['消费金额'].median()
+freq_median = df['消费频次'].median()
+recent_median = df['最近消费天数'].median()
+
 cluster_names = {}
 for cluster in range(4):
     row = cluster_analysis.loc[cluster]
-    if row['消费金额'] > 300 and row['消费频次'] > 8:
+    if row['消费金额'] > amount_median * 1.5 and row['消费频次'] > freq_median * 1.5:
         cluster_names[cluster] = '高价值活跃用户'
-    elif row['消费金额'] > 200 and row['最近消费天数'] < 30:
+    elif row['消费金额'] > amount_median * 1.2 and row['最近消费天数'] < recent_median * 0.6:
         cluster_names[cluster] = '潜力用户'
-    elif row['消费频次'] < 2:
+    elif row['消费频次'] < freq_median * 0.6 and row['最近消费天数'] > recent_median * 1.5:
         cluster_names[cluster] = '沉睡用户'
     else:
         cluster_names[cluster] = '普通用户'
