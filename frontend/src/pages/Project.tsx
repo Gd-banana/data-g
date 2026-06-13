@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor, { loader } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
@@ -1834,6 +1834,8 @@ function Project(_props: ProjectProps) {
   const [pyodideProgress, setPyodideProgress] = useState<string>('点击"运行代码"开始加载环境...');
   const [pyodidePercent, setPyodidePercent] = useState<number>(0);
 
+  const runCodeRef = useRef<() => Promise<void>>(async () => {});
+
   useEffect(() => {
     if (projectData) {
       const defaultParams: Record<string, number> = {};
@@ -2128,6 +2130,10 @@ df.to_csv('/tmp/dataset.csv', index=False, encoding='utf-8-sig')
       setIsRunning(false);
     }
   }, [dataParams, code]);
+
+  useEffect(() => {
+    runCodeRef.current = runCode;
+  }, [runCode]);
 
   if (!projectData) {
     return (
@@ -2425,78 +2431,9 @@ df.to_csv('/tmp/dataset.csv', index=False, encoding='utf-8-sig')
                         onClick={() => {
                           setCode(projectData.referenceCode);
                           setActiveTab('code-editor');
-                          setOutput('');
-                          setIsRunning(true);
-                          setTimeout(async () => {
-                            try {
-                              await loadPyodideModule();
-                              const pyodide = await initPyodide((msg, percent) => {
-                                setOutput(prev => prev + '\n' + msg);
-                                if (percent !== undefined) setPyodidePercent(percent);
-                              });
-
-                              if (!pyodide) {
-                                throw new Error('Python环境加载失败');
-                              }
-
-                              setOutput(prev => prev + '\n环境加载完成，正在执行参考代码...\n\n');
-
-                              // 直接使用参考代码，不依赖code状态的异步更新
-                              let runCode = projectData.referenceCode;
-                              Object.entries(dataParams).forEach(([key, value]) => {
-                                const regex = new RegExp(`\\b${key}\\s*=\\s*\\d+`, 'g');
-                                runCode = runCode.replace(regex, `${key} = ${value}`);
-                              });
-
-                              pyodide.globals.set('user_code', runCode);
-
-                              const wrappedCode = [
-                                'import sys',
-                                'import ast',
-                                'import re',
-                                '',
-                                'class OutputCapture:',
-                                '    def __init__(self):',
-                                '        self.buffer = []',
-                                '    def write(self, text):',
-                                '        self.buffer.append(text)',
-                                '    def flush(self):',
-                                '        pass',
-                                '    def getvalue(self):',
-                                '        return \'\'.join(self.buffer)',
-                                '',
-                                'old_stdout = sys.stdout',
-                                'sys.stdout = OutputCapture()',
-                                'output_result = ""',
-                                '',
-                                'try:',
-                                '    code = user_code',
-                                '    try:',
-                                '        ast.parse(code)',
-                                '    except SyntaxError as e:',
-                                '        print(f"语法错误: {e}")',
-                                '        sys.stdout = old_stdout',
-                                '        sys.exit(1)',
-                                '    exec(code)',
-                                '    output_result = sys.stdout.getvalue()',
-                                'except Exception as e:',
-                                '    print(f"执行错误: {type(e).__name__}: {e}")',
-                                '    import traceback',
-                                '    traceback.print_exc()',
-                                '',
-                                'sys.stdout = old_stdout',
-                                'output_result',
-                              ].join('\n');
-
-                              const result = await pyodide.runPythonAsync(wrappedCode);
-                              setOutput(result || '代码执行完成，无输出');
-                            } catch (error: any) {
-                              setOutput(`执行出错: ${error.message || error}`);
-                            } finally {
-                              setIsRunning(false);
-                              setPyodideReady(true);
-                            }
-                          }, 300);
+                          setTimeout(() => {
+                            runCodeRef.current();
+                          }, 100);
                         }}
                         className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center gap-1"
                       >
