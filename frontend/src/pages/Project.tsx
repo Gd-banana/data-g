@@ -736,18 +736,37 @@ print("各聚类均值:")
 print(cluster_analysis.round(2))
 
 print("\\n========== 5. 聚类命名建议 ==========")
-amount_median = df['消费金额'].median()
-freq_median = df['消费频次'].median()
-recent_median = df['最近消费天数'].median()
-
+# 根据各簇在所有簇中的相对排名来命名，而不是与整体中位数比较
+# 这样可以确保不同簇有不同的标签
 cluster_names = {}
+
+# 获取每个维度的所有簇均值
+amount_means = cluster_analysis['消费金额'].values
+freq_means = cluster_analysis['消费频次'].values
+recent_means = cluster_analysis['最近消费天数'].values
+
+# 计算每个簇在各维度上的相对位置 (0-1标准化)
+amount_min, amount_max = amount_means.min(), amount_means.max()
+freq_min, freq_max = freq_means.min(), freq_means.max()
+recent_min, recent_max = recent_means.min(), recent_means.max()
+
+# 如果所有值都相同（退化情况），避免除以0
+def normalize(val, vmin, vmax):
+    if vmax == vmin:
+        return 0.5
+    return (val - vmin) / (vmax - vmin)
+
 for cluster in range(4):
     row = cluster_analysis.loc[cluster]
-    if row['消费金额'] > amount_median * 1.5 and row['消费频次'] > freq_median * 1.5:
+    amt_norm = normalize(row['消费金额'], amount_min, amount_max)
+    freq_norm = normalize(row['消费频次'], freq_min, freq_max)
+    recent_norm = normalize(row['最近消费天数'], recent_min, recent_max)
+    
+    if amt_norm > 0.6 and freq_norm > 0.6:
         cluster_names[cluster] = '高价值活跃用户'
-    elif row['消费金额'] > amount_median * 1.2 and row['最近消费天数'] < recent_median * 0.6:
+    elif amt_norm > 0.5 and recent_norm < 0.4:
         cluster_names[cluster] = '潜力用户'
-    elif row['消费频次'] < freq_median * 0.6 and row['最近消费天数'] > recent_median * 1.5:
+    elif freq_norm < 0.4 and recent_norm > 0.6:
         cluster_names[cluster] = '沉睡用户'
     else:
         cluster_names[cluster] = '普通用户'
@@ -1838,7 +1857,7 @@ function Project(_props: ProjectProps) {
   const [pyodideProgress, setPyodideProgress] = useState<string>('点击"运行代码"开始加载环境...');
   const [pyodidePercent, setPyodidePercent] = useState<number>(0);
 
-  const runCodeRef = useRef<() => Promise<void>>(async () => {});
+  const runCodeRef = useRef<(overrideCode?: string) => Promise<void>>(async () => {});
 
   useEffect(() => {
     if (projectData) {
@@ -1878,15 +1897,6 @@ function Project(_props: ProjectProps) {
 
   const handleParamChange = (paramName: string, value: number) => {
     setDataParams(prev => ({ ...prev, [paramName]: value }));
-  };
-
-  const generateCodeWithParams = () => {
-    let generatedCode = code;
-    Object.entries(dataParams).forEach(([key, value]) => {
-      const regex = new RegExp(`\\b${key}\\s*=\\s*\\d+`, 'g');
-      generatedCode = generatedCode.replace(regex, `${key} = ${value}`);
-    });
-    return generatedCode;
   };
 
   const downloadDataset = async () => {
@@ -2032,7 +2042,7 @@ df.to_csv('/tmp/dataset.csv', index=False, encoding='utf-8-sig')
     }
   };
 
-  const runCode = useCallback(async () => {
+  const runCode = useCallback(async (overrideCode?: string) => {
     setIsRunning(true);
     setOutput('正在加载Python环境和数据分析库...\n\n提示：首次加载可能需要 30-60 秒，请耐心等待\n');
 
@@ -2049,7 +2059,12 @@ df.to_csv('/tmp/dataset.csv', index=False, encoding='utf-8-sig')
 
       setOutput(prev => prev + '\n环境加载完成，正在执行代码...\n\n');
 
-      const generatedCode = generateCodeWithParams();
+      const codeToExecute = overrideCode ?? code;
+      let generatedCode = codeToExecute;
+      Object.entries(dataParams).forEach(([key, value]) => {
+        const regex = new RegExp(`\\b${key}\\s*=\\s*\\d+`, 'g');
+        generatedCode = generatedCode.replace(regex, `${key} = ${value}`);
+      });
 
       pyodide.globals.set('user_code', generatedCode);
 
@@ -2138,113 +2153,6 @@ df.to_csv('/tmp/dataset.csv', index=False, encoding='utf-8-sig')
   useEffect(() => {
     runCodeRef.current = runCode;
   }, [runCode]);
-
-  const runCodeDirectly = useCallback(async (codeToRun: string) => {
-    setIsRunning(true);
-    setOutput('正在加载Python环境和数据分析库...\n\n提示：首次加载可能需要 30-60 秒，请耐心等待\n');
-
-    try {
-      await loadPyodideModule();
-      const pyodide = await initPyodide((msg, percent) => {
-        setOutput(prev => prev + '\n' + msg);
-        if (percent !== undefined) setPyodidePercent(percent);
-      });
-
-      if (!pyodide) {
-        throw new Error('Python环境加载失败');
-      }
-
-      setOutput(prev => prev + '\n环境加载完成，正在执行参考代码...\n\n');
-
-      let generatedCode = codeToRun;
-      Object.entries(dataParams).forEach(([key, value]) => {
-        const regex = new RegExp(`\\b${key}\\s*=\\s*\\d+`, 'g');
-        generatedCode = generatedCode.replace(regex, `${key} = ${value}`);
-      });
-
-      pyodide.globals.set('user_code', generatedCode);
-
-      const wrappedCode = [
-        'import sys',
-        'import ast',
-        'import re',
-        '',
-        'class OutputCapture:',
-        '    def __init__(self):',
-        '        self.buffer = []',
-        '    def write(self, text):',
-        '        self.buffer.append(text)',
-        '    def flush(self):',
-        '        pass',
-        '    def getvalue(self):',
-        '        return \'\'.join(self.buffer)',
-        '',
-        'old_stdout = sys.stdout',
-        'sys.stdout = OutputCapture()',
-        'output_result = ""',
-        '',
-        'try:',
-        '    code = user_code',
-        '    code_lines = [line.strip() for line in code.splitlines() if line.strip()]',
-        '',
-        '    syntax_ok = True',
-        '    try:',
-        '        ast.parse(code)',
-        '    except SyntaxError as e:',
-        '        print(f"语法错误: {e}")',
-        '        syntax_ok = False',
-        '',
-        '    if syntax_ok:',
-        '        has_real_code = False',
-        '        for line in code_lines:',
-        '            if not line.startswith(\'#\') and len(line) > 0:',
-        '                has_real_code = True',
-        '                break',
-        '',
-        '        if not has_real_code:',
-        '            print("提示: 检测到只有注释或空行，请编写实际的Python代码")',
-        '        else:',
-        '            exec(code)',
-        '            last_line = code_lines[-1] if code_lines else None',
-        '            if last_line and not last_line.startswith(\'#\') and not last_line.startswith(\'print(\'):',
-        '                try:',
-        '                    result = eval(last_line)',
-        '                    if result is not None:',
-        '                        print(result)',
-        '                except:',
-        '                    pass',
-        '',
-        '    captured_output = sys.stdout.getvalue()',
-        '    if captured_output.strip():',
-        '        output_result = captured_output',
-        '    else:',
-        '        output_result = "代码执行完成，但没有输出内容。请在代码中添加 print() 语句来查看结果。"',
-        '',
-        'except SyntaxError as e:',
-        '    output_result = f"语法错误: {e}"',
-        'except Exception as e:',
-        '    output_result = f"执行错误: {type(e).__name__}: {str(e)}"',
-        'finally:',
-        '    sys.stdout = old_stdout',
-        '',
-        'output_result',
-        ''
-      ].join('\n');
-
-      const result = await pyodide.runPythonAsync(wrappedCode);
-
-      if (result !== undefined && result !== null && String(result).trim()) {
-        setOutput(String(result));
-      } else {
-        setOutput('代码执行完成，但没有输出内容');
-      }
-    } catch (error) {
-      console.error('Python execution error:', error);
-      setOutput(`执行错误: ${error}\n\n提示: 请检查代码语法是否正确`);
-    } finally {
-      setIsRunning(false);
-    }
-  }, [dataParams]);
 
   if (!projectData) {
     return (
@@ -2402,7 +2310,7 @@ df.to_csv('/tmp/dataset.csv', index=False, encoding='utf-8-sig')
                 </div>
                 <div className="mt-6 flex space-x-4">
                   <button
-                    onClick={runCode}
+                    onClick={() => runCode()}
                     disabled={isRunning}
                     className="px-6 py-3 bg-gold-500 text-dark-900 font-semibold rounded-lg hover:bg-gold-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -2438,7 +2346,7 @@ df.to_csv('/tmp/dataset.csv', index=False, encoding='utf-8-sig')
                   <div className="flex items-center justify-between px-4 py-3 border-b border-dark-600">
                     <span className="text-gray-400 text-sm">代码编辑器</span>
                     <button
-                      onClick={runCode}
+                      onClick={() => runCode()}
                       disabled={isRunning}
                       className="px-4 py-2 bg-gold-500 text-dark-900 font-semibold rounded-lg hover:bg-gold-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                     >
@@ -2543,7 +2451,7 @@ df.to_csv('/tmp/dataset.csv', index=False, encoding='utf-8-sig')
                           const codeToRun = projectData.referenceCode;
                           setCode(codeToRun);
                           setActiveTab('code-editor');
-                          runCodeDirectly(codeToRun);
+                          runCode(codeToRun);
                         }}
                         className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center gap-1"
                       >
