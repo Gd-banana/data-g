@@ -1809,7 +1809,20 @@ print("=" * 60)`,
 function Project(_props: ProjectProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const projectData = projectsData[id || 'project-1'];
+
+  const resolveProjectKey = (rawId: string | undefined): string => {
+    if (!rawId) return 'project-1';
+    if (rawId in projectsData) return rawId;
+    const numMatch = rawId.match(/^(\d+)$/);
+    if (numMatch) {
+      const key = `project-${numMatch[1]}`;
+      if (key in projectsData) return key;
+    }
+    return 'project-1';
+  };
+
+  const projectKey = resolveProjectKey(id);
+  const projectData = projectsData[projectKey];
   
   const [dataParams, setDataParams] = useState<Record<string, number>>({});
   const [code, setCode] = useState('');
@@ -1818,6 +1831,7 @@ function Project(_props: ProjectProps) {
   const [showReference, setShowReference] = useState(false);
   const [activeTab, setActiveTab] = useState('description');
   const [pyodideReady, setPyodideReady] = useState(false);
+  const [pyodideProgress, setPyodideProgress] = useState<string>('点击"运行代码"开始加载环境...');
 
   useEffect(() => {
     if (projectData) {
@@ -1834,12 +1848,16 @@ function Project(_props: ProjectProps) {
     const initPyodideWorker = async () => {
       try {
         await loadPyodideModule();
-        const pyodide = await initPyodide();
+        const pyodide = await initPyodide((msg) => {
+          setPyodideProgress(msg);
+        });
         if (pyodide) {
           setPyodideReady(true);
+          setPyodideProgress('环境准备就绪！');
         }
       } catch (error) {
         console.error('Pyodide initialization failed:', error);
+        setPyodideProgress('环境加载失败，请刷新重试');
       }
     };
 
@@ -1862,12 +1880,16 @@ function Project(_props: ProjectProps) {
   const downloadDataset = async () => {
     try {
       await loadPyodideModule();
-      const pyodide = await initPyodide();
-      
+      const pyodide = await initPyodide((msg) => {
+        setPyodideProgress(msg);
+      });
+
       if (!pyodide) {
         alert('Python环境加载失败，请重试');
         return;
       }
+
+      setPyodideProgress('正在生成数据集...');
 
       const generateCode = `
 import pandas as pd
@@ -1999,17 +2021,19 @@ df.to_csv('/tmp/dataset.csv', index=False, encoding='utf-8-sig')
 
   const runCode = useCallback(async () => {
     setIsRunning(true);
-    setOutput('正在加载Python环境和数据分析库（pandas, numpy, scikit-learn）...\n\n提示：首次加载可能需要 30-60 秒，请耐心等待\n');
+    setOutput('正在加载Python环境和数据分析库...\n\n提示：首次加载可能需要 30-60 秒，请耐心等待\n');
 
     try {
       await loadPyodideModule();
-      const pyodide = await initPyodide();
+      const pyodide = await initPyodide((msg) => {
+        setOutput(prev => prev + '\n' + msg);
+      });
 
       if (!pyodide) {
         throw new Error('Python环境加载失败');
       }
 
-      setOutput(prev => prev + '环境加载完成，正在执行代码...\n\n');
+      setOutput(prev => prev + '\n环境加载完成，正在执行代码...\n\n');
 
       const generatedCode = generateCodeWithParams();
 
@@ -2266,7 +2290,7 @@ output_result
                   </button>
                 </div>
                 {!pyodideReady && !isRunning && (
-                  <p className="text-gray-400 text-sm mt-2">首次运行需要加载Python环境，请稍候...</p>
+                  <p className="text-gray-400 text-sm mt-2">首次运行需要加载Python环境，请稍候... {pyodideProgress}</p>
                 )}
               </div>
             )}
@@ -2307,7 +2331,7 @@ output_result
                   </div>
                   <div className="p-4 min-h-[200px]">
                     <pre className="text-gray-300 font-mono text-sm whitespace-pre-wrap">
-                      {output || (pyodideReady ? '点击"运行代码"执行代码...' : '正在加载Python环境，请稍候...')}
+                      {output || (pyodideReady ? '点击"运行代码"执行代码...' : pyodideProgress)}
                     </pre>
                   </div>
                 </div>
