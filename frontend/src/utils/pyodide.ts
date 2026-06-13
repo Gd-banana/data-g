@@ -12,7 +12,7 @@ export const initPyodide = async (): Promise<any> => {
       script.id = 'pyodide-script';
       script.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.js';
       document.head.appendChild(script);
-      
+
       await new Promise<void>((resolve, reject) => {
         script.onload = () => resolve();
         script.onerror = () => reject(new Error('Failed to load Pyodide'));
@@ -29,11 +29,24 @@ export const initPyodide = async (): Promise<any> => {
       indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.26.0/full/'
     });
 
-    await pyodideInstance.loadPackage(['pandas', 'numpy', 'matplotlib', 'micropip']);
-    
+    await pyodideInstance.loadPackage([
+      'pandas',
+      'numpy',
+      'matplotlib',
+      'micropip',
+      'scipy',
+      'scikit-learn'
+    ]);
+
+    // 使用 micropip 安装 seaborn
+    await pyodideInstance.runPythonAsync(`
+import micropip
+await micropip.install('seaborn')
+    `);
+
     isInitialized = true;
-    console.log('Pyodide initialized successfully');
-    
+    console.log('Pyodide initialized successfully with pandas, numpy, matplotlib, scipy, scikit-learn, seaborn');
+
     return pyodideInstance;
   } catch (error) {
     console.error('Failed to initialize Pyodide:', error);
