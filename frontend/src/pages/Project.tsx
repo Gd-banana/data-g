@@ -14,7 +14,7 @@ if (typeof window !== 'undefined') {
 
 loader.config({ monaco });
 
-let initPyodide: () => Promise<any>;
+let initPyodide: (onProgress?: (msg: string) => void) => Promise<any>;
 
 async function loadPyodideModule() {
   const module = await import('../utils/pyodide');
