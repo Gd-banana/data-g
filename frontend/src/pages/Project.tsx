@@ -320,20 +320,20 @@ print("数据基本信息:")
 print(df.info())
 
 # 2. 查看描述统计
-print("\n描述统计:")
+print("\\n描述统计:")
 print(df.describe().round(2))
 
 # 3. 计算相关性矩阵
-print("\n相关性矩阵:")
+print("\\n相关性矩阵:")
 print(df[['销量', '客单价', '好评率', '库存']].corr().round(2))
 
 # 4. 分析销量与好评率的关系
-print("\n按好评率分组的销量统计:")
+print("\\n按好评率分组的销量统计:")
 rating_groups = df.groupby(pd.cut(df['好评率'], bins=[0.7, 0.8, 0.9, 1.0]))['销量'].agg(['mean', 'count', 'std'])
 print(rating_groups.round(2))
 
 # 5. 输出关键发现
-print("\n关键发现:")
+print("\\n关键发现:")
 print(f"- 平均销量: {df['销量'].mean():.1f}")
 print(f"- 最高销量: {df['销量'].max()}")
 print(f"- 平均好评率: {df['好评率'].mean():.3f}")`,
@@ -659,16 +659,16 @@ df = pd.DataFrame({
 print("========== 1. 数据概览 ==========")
 print("用户数据前5行:")
 print(df.head())
-print("\n数据描述统计:")
+print("\\n数据描述统计:")
 print(df.describe().round(2))
 
-print("\n========== 2. 数据标准化 ==========")
+print("\\n========== 2. 数据标准化 ==========")
 features = df[['消费金额', '消费频次', '最近消费天数', '浏览时长']]
 scaler = StandardScaler()
 scaled_features = scaler.fit_transform(features)
 print("标准化完成，特征维度:", scaled_features.shape)
 
-print("\n========== 3. 确定最佳K值 ==========")
+print("\\n========== 3. 确定最佳K值 ==========")
 inertia_list = []
 for k in range(2, 8):
     kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
@@ -676,14 +676,14 @@ for k in range(2, 8):
     inertia_list.append(kmeans.inertia_)
     print(f"K={k}: inertia={kmeans.inertia_:.2f}")
 
-print("\n========== 4. 执行 KMeans 聚类 (K=4) ==========")
+print("\\n========== 4. 执行 KMeans 聚类 (K=4) ==========")
 kmeans = KMeans(n_clusters=4, random_state=42, n_init=10)
 df['聚类标签'] = kmeans.fit_predict(scaled_features)
 
-print("\n各聚类用户数量:")
+print("\\n各聚类用户数量:")
 print(df['聚类标签'].value_counts().sort_index())
 
-print("\n========== 5. 聚类特征分析 ==========")
+print("\\n========== 5. 聚类特征分析 ==========")
 cluster_analysis = df.groupby('聚类标签')[['消费金额', '消费频次', '最近消费天数', '浏览时长']].mean()
 print("各聚类均值:")
 print(cluster_analysis.round(2))`,
@@ -989,7 +989,7 @@ df = pd.DataFrame({
 print("========== 1. 数据概览 ==========")
 print("销售数据前5行:")
 print(df.head())
-print("\n数据描述统计:")
+print("\\n数据描述统计:")
 print(df.describe().round(2))
 
 print("\\n========== 2. 特征工程 ==========")
@@ -1841,6 +1841,9 @@ function Project(_props: ProjectProps) {
       });
       setDataParams(defaultParams);
       setCode(projectData.defaultCode);
+      setShowReference(false);
+      setActiveTab('description');
+      setOutput('');
     }
   }, [projectData]);
 
@@ -2039,71 +2042,72 @@ df.to_csv('/tmp/dataset.csv', index=False, encoding='utf-8-sig')
 
       pyodide.globals.set('user_code', generatedCode);
 
-      const wrappedCode = `
-import sys
-import ast
-import re
-
-class OutputCapture:
-    def __init__(self):
-        self.buffer = []
-    def write(self, text):
-        self.buffer.append(text)
-    def flush(self):
-        pass
-    def getvalue(self):
-        return ''.join(self.buffer)
-
-old_stdout = sys.stdout
-sys.stdout = OutputCapture()
-output_result = ""
-
-try:
-    code = user_code
-    code_lines = [line.strip() for line in code.split('\\n') if line.strip()]
-
-    syntax_ok = True
-    try:
-        ast.parse(code)
-    except SyntaxError as e:
-        print(f"语法错误: {e}")
-        syntax_ok = False
-
-    if syntax_ok:
-        has_real_code = False
-        for line in code_lines:
-            if not line.startswith('#') and len(line) > 0:
-                has_real_code = True
-                break
-
-        if not has_real_code:
-            print("提示: 检测到只有注释或空行，请编写实际的Python代码")
-        else:
-            exec(code)
-            last_line = code_lines[-1] if code_lines else None
-            if last_line and not last_line.startswith('#') and not last_line.startswith('print('):
-                try:
-                    result = eval(last_line)
-                    if result is not None:
-                        print(result)
-                except:
-                    pass
-
-    captured_output = sys.stdout.getvalue()
-    if captured_output.strip():
-        output_result = captured_output
-    else:
-        output_result = "代码执行完成，但没有输出内容。请在代码中添加 print() 语句来查看结果。"
-
-except SyntaxError as e:
-    output_result = f"语法错误: {e}"
-except Exception as e:
-    output_result = f"执行错误: {type(e).__name__}: {str(e)}"
-finally:
-    sys.stdout = old_stdout
-
-output_result
-`;
+      const wrappedCode = [
+        'import sys',
+        'import ast',
+        'import re',
+        '',
+        'class OutputCapture:',
+        '    def __init__(self):',
+        '        self.buffer = []',
+        '    def write(self, text):',
+        '        self.buffer.append(text)',
+        '    def flush(self):',
+        '        pass',
+        '    def getvalue(self):',
+        '        return \'\'.join(self.buffer)',
+        '',
+        'old_stdout = sys.stdout',
+        'sys.stdout = OutputCapture()',
+        'output_result = ""',
+        '',
+        'try:',
+        '    code = user_code',
+        '    code_lines = [line.strip() for line in code.splitlines() if line.strip()]',
+        '',
+        '    syntax_ok = True',
+        '    try:',
+        '        ast.parse(code)',
+        '    except SyntaxError as e:',
+        '        print(f"语法错误: {e}")',
+        '        syntax_ok = False',
+        '',
+        '    if syntax_ok:',
+        '        has_real_code = False',
+        '        for line in code_lines:',
+        '            if not line.startswith(\'#\') and len(line) > 0:',
+        '                has_real_code = True',
+        '                break',
+        '',
+        '        if not has_real_code:',
+        '            print("提示: 检测到只有注释或空行，请编写实际的Python代码")',
+        '        else:',
+        '            exec(code)',
+        '            last_line = code_lines[-1] if code_lines else None',
+        '            if last_line and not last_line.startswith(\'#\') and not last_line.startswith(\'print(\'):',
+        '                try:',
+        '                    result = eval(last_line)',
+        '                    if result is not None:',
+        '                        print(result)',
+        '                except:',
+        '                    pass',
+        '',
+        '    captured_output = sys.stdout.getvalue()',
+        '    if captured_output.strip():',
+        '        output_result = captured_output',
+        '    else:',
+        '        output_result = "代码执行完成，但没有输出内容。请在代码中添加 print() 语句来查看结果。"',
+        '',
+        'except SyntaxError as e:',
+        '    output_result = f"语法错误: {e}"',
+        'except Exception as e:',
+        '    output_result = f"执行错误: {type(e).__name__}: {str(e)}"',
+        'finally:',
+        '    sys.stdout = old_stdout',
+        '',
+        'output_result',
+        ''
+      ].join('\n');
 
       const result = await pyodide.runPythonAsync(wrappedCode);
 
@@ -2358,55 +2362,61 @@ output_result
               <div className="bg-dark-800 rounded-xl border border-dark-600 overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-dark-600">
                   <span className="text-gray-400 text-sm">参考代码</span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        setCode(projectData.referenceCode);
-                        setActiveTab('code-editor');
-                        setTimeout(() => runCode(), 500);
-                      }}
-                      className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center gap-1"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      直接运行
-                    </button>
-                    <button
-                      onClick={() => {
-                        setCode(projectData.referenceCode);
-                        setActiveTab('code-editor');
-                      }}
-                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors flex items-center gap-1"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                      复制到编辑器
-                    </button>
-                    <button
-                      onClick={() => setShowReference(!showReference)}
-                      className="text-gold-500 hover:text-gold-400 transition-colors text-sm"
-                    >
-                      {showReference ? '收起' : '查看代码'}
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setShowReference(!showReference)}
+                    className="px-3 py-1.5 bg-gold-500/10 hover:bg-gold-500/20 text-gold-500 text-sm rounded-lg transition-colors"
+                  >
+                    {showReference ? '收起代码' : '查看代码'}
+                  </button>
                 </div>
-                {showReference && (
-                  <div className="p-4">
-                    <pre className="text-gray-300 font-mono text-sm whitespace-pre-wrap max-h-[600px] overflow-y-auto">
-                      {projectData.referenceCode}
-                    </pre>
+                {showReference ? (
+                  <div>
+                    <div className="p-4 bg-amber-500/10 border-b border-amber-500/30">
+                      <p className="text-amber-400 text-sm">💡 建议：如果还没有自己尝试，请先关闭代码，到"代码编辑器"自己动手写。独立思考后再对照参考代码，学习效果最好！</p>
+                    </div>
+                    <div className="p-4 flex items-center gap-2 border-b border-dark-600">
+                      <button
+                        onClick={() => {
+                          setCode(projectData.referenceCode);
+                          setActiveTab('code-editor');
+                        }}
+                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors flex items-center gap-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        复制到编辑器
+                      </button>
+                      <button
+                        onClick={() => {
+                          setCode(projectData.referenceCode);
+                          setActiveTab('code-editor');
+                          setTimeout(() => runCode(), 500);
+                        }}
+                        className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center gap-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        直接运行
+                      </button>
+                    </div>
+                    <div className="p-4">
+                      <pre className="text-gray-300 font-mono text-sm whitespace-pre-wrap max-h-[600px] overflow-y-auto">
+                        {projectData.referenceCode}
+                      </pre>
+                    </div>
                   </div>
-                )}
-                {!showReference && (
+                ) : (
                   <div className="p-8 text-center">
                     <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
-                    <p className="text-gray-400">点击按钮直接运行或复制参考代码</p>
-                    <p className="text-gray-500 text-sm mt-2">建议先尝试自己完成，遇到困难时再查看参考代码</p>
+                    <p className="text-gray-300 text-lg font-medium mb-2">请先到"代码编辑器"自己尝试</p>
+                    <p className="text-gray-400">这里存放着本项目的参考代码和答案</p>
+                    <p className="text-gray-500 text-sm mt-2">💡 学习建议：独立思考 → 动手编写 → 遇到阻碍 → 再回来看代码</p>
+                    <p className="text-gray-500 text-sm mt-1">只有经过自己尝试后，参考代码才真正有价值</p>
                   </div>
                 )}
               </div>
